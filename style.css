@@ -1,0 +1,36 @@
+.grid-line {
+	fill: transparent;
+	stroke: gray;
+	stroke-width: 0.5px;
+}
+
+.data-line {
+	fill: transparent;
+	stroke: RoyalBlue;
+}
+
+.zoomed {
+	border: 1px dotted green;
+}
+
+.overview {
+	position: absolute;
+	left: 8px; 
+   	top: 450px;  
+	border: 1px dotted red;
+}
+
+.axis {
+	position: absolute;
+	left: 8px; 
+   	top: 415px;  
+}
+
+.red-line {
+	stroke: red;
+	stroke-width: 2px;
+}
+
+svg {
+	border: 1px dotted blue;	
+}
