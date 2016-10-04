@@ -26,6 +26,12 @@
    	top: 415px;  
 }
 
+.axis text {
+	font-weight: bold;
+    font-family: sans-serif;
+    font-size: 12px;
+}
+
 .red-line {
 	stroke: red;
 	stroke-width: 2px;
