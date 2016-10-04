@@ -1,0 +1,50 @@
+<html>
+	<head>
+		<title>DataVis Page</title>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="https://d3js.org/d3-axis.v1.min.js"></script>
+		<script src="https://d3js.org/d3-path.v1.min.js"></script>
+		<script src="https://d3js.org/d3-color.v1.min.js"></script>
+		<script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+		<script src="https://d3js.org/d3-ease.v1.min.js"></script>
+		<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+		<script src="https://d3js.org/d3-selection.v1.min.js"></script>
+		<script src="https://d3js.org/d3-timer.v1.min.js"></script>
+		<script src="https://d3js.org/d3-transition.v1.min.js"></script>
+		<script src="https://d3js.org/d3-drag.v1.min.js"></script>
+		<script src="https://d3js.org/d3-zoom.v1.min.js"></script>
+		<script src="https://d3js.org/d3-brush.v1.min.js"></script>
+		<!-- <script src="http://threejs.org/build/three.js"></script> -->
+		<!--Camera control -->
+		<!-- <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script> -->
+		<link rel="stylesheet" href="style.css">
+	</head>
+
+	<body>
+		<div>
+			<video id="video" src="Data/20160914_165116.mp4" width="600" controls></video>
+		</div>
+		<div>
+			<svg id="vid-ax" width="600" height="20"></svg>
+		</div>
+		<div>
+			<svg class="zoomed" width="600" height="400">
+				<text x="5" y="20" font-family="Verdana" font-size="14">
+	    			hh:mm:ss.ms
+	  			</text>
+			</svg>			
+		</div>
+
+		<div>
+			<svg id="axis" class="axis" width="600" height="20"></svg>
+		</div>
+
+		<div>
+			<svg class="overview" width="600" height="100"></svg>
+		</div>
+
+		<script src="Data/watch_data-14-09-16-13.js"></script>
+		<script src="scatter.js"></script>
+		<!-- <script src="3dVis.js"></script> -->
+	</body>
+</html>

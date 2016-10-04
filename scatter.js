@@ -4,8 +4,8 @@ function updateAxis(ticks) {
 			.tickFormat(function (d) {
 				var hrs = parseInt(d*(10**-9)/3600),
 					mins = parseInt(d*(10**-9)/60) - hrs*60,
-					secs = parseInt(d*(10**-9)) - (mins*60 + hrs*3600)
-					msecs = parseInt(d*(10**-6)) - 1000*(secs + mins*60 + hrs*3600);
+					secs = parseInt(d*(10**-9)).toFixed(2) - (mins*60 + hrs*3600)
+					msecs = parseInt(d*(10**-6)).toFixed(3) - 1000*(secs + mins*60 + hrs*3600);
 			 	return hrs+":"+mins+":"+secs+"."+msecs;
 			})
 			;
@@ -97,10 +97,20 @@ function brushed() {
 //--DOM element variables
 var svg = d3.select(".zoomed"),
 	svg_overview = d3.select(".overview"),
-    svg_axis = d3.select("body").append("svg")
-    	.attr("class", "axis")
-    	.attr("width", 600)
-    	.attr("height", 20);
+    svg_axis = d3.select("#axis");
+    video = document.getElementById("video"),
+    svg_vid_axis = d3.select("#vid-ax");
+
+video.ontimeupdate = function() {
+	var t = video.currentTime;
+	svg_vid_axis.selectAll(".red-line").remove();
+    svg_vid_axis.append("line")
+		.attr("class", "red-line")
+		.attr("x1", vid_scale(t))
+		.attr("y1", 0)
+		.attr("x2", vid_scale(t))
+		.attr("y2", 20);
+};
 
 //--Data variables
 var some_data = data_obj.data.slice(0, 100),
@@ -123,11 +133,14 @@ var xscale = d3.scaleLinear()
 
 	yscale = d3.scaleLinear()							
 		.domain([xmin, xmax])				  	
-		.range([20, svg.attr("height")-20]),
+		.range([30, svg.attr("height")-20]),
 
 	yscale_overview = d3.scaleLinear()							
 		.domain([xmin, xmax])				  	
 		.range([5, svg_overview.attr("height")-5]);
+
+
+
 
 //--Behaviours
 var zoom = d3.zoom()
@@ -144,3 +157,16 @@ draw(svg_overview, yscale_overview, 10);
 zoom(svg);
 brush(svg_overview);
 
+var vid_scale = d3.scaleLinear();
+
+
+video.onloadedmetadata = function() {
+	vid_scale = d3.scaleLinear()
+			.domain([0, video.duration])
+			.range([0, 600]);
+
+	var vid_axis = d3.axisBottom(vid_scale).tickFormat( function(d) {
+		return d+"s"	
+	});
+	vid_axis(svg_vid_axis);
+};
