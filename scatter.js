@@ -1,12 +1,22 @@
-function updateAxis() {
+function updateAxis(ticks) {
 	var axis = d3.axisBottom(xscale)
-			.ticks(d3.timeMinute.every(1));
+			.ticks(ticks)
+			.tickFormat(function (d) {
+				var hrs = parseInt(d*(10**-9)/3600),
+					mins = parseInt(d*(10**-9)/60) - hrs*60,
+					secs = parseInt(d*(10**-9)) - (mins*60 + hrs*3600)
+					msecs = parseInt(d*(10**-6)) - 1000*(secs + mins*60 + hrs*3600);
+			 	return hrs+":"+mins+":"+secs+"."+msecs;
+			})
+			;
 	svg_axis.call(axis);
 }
 
-function draw(svg, yscale) {
-	updateAxis();
-	svg.selectAll("*").remove();
+function draw(svg, yscale, ticks) {
+	updateAxis(ticks);
+	svg.selectAll("line").remove();
+	svg.selectAll("circle").remove();
+	svg.selectAll("path").remove();
 	var line = d3.line()
 		.x(function(d){ return xscale(d.t) })
 		.y(function(d){ return yscale(d.x) });
@@ -44,7 +54,11 @@ function zoomed() {
 	if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return;
 	var pvals = d3.event.transform,
 		half_dist = (pvals.k*1200)/2;
-	xscale.range([pvals.x-half_dist, pvals.x+half_dist]);
+
+	var left = pvals.x-half_dist,
+		right = pvals.x+half_dist;
+
+	xscale.range([left, right]);
 
 	var scale = d3.scaleLinear()							
 			.domain([pvals.x-half_dist, pvals.x+half_dist])				  	
@@ -53,7 +67,7 @@ function zoomed() {
 	//TODO: limit how small the brush can be
 	brush.move(svg_overview, [scale(0), scale(600)]);	
 	
-	draw(svg, yscale);
+	draw(svg, yscale, pvals.k*10);
 }
 
 
@@ -75,7 +89,7 @@ function brushed() {
 								.translate(600-2*s[0], 0)	
 	);
 
-	draw(svg, yscale);
+	draw( svg, yscale, (300/(s[1]-s[0]))*10 );
 }
 
 
@@ -123,8 +137,8 @@ var zoom = d3.zoom()
 		.on("brush", brushed);
 
 //Draw
-draw(svg, yscale);
-draw(svg_overview, yscale_overview);
+draw(svg, yscale, 10);
+draw(svg_overview, yscale_overview, 10);
 
 //Associate behaviours
 zoom(svg);
