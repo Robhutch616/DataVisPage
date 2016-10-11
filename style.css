@@ -1,0 +1,61 @@
+div {
+	width: 600px;
+	border: 1px dotted red;	
+}
+
+.right {
+	float: left;
+	position: relative;
+	height: 800px;
+}
+
+.left {
+	float: left;
+	height: 800px;
+}
+
+.stream-div {
+	position: relative;
+/*	top: -310px;
+*/	width: 600px;
+}
+
+.grid-line {
+	fill: transparent;
+	stroke: gray;
+	stroke-width: 0.5px;
+}
+
+.data-line {
+	fill: transparent;
+	stroke: RoyalBlue;
+}
+
+.axis text {
+	font-weight: bold;
+    font-family: sans-serif;
+    font-size: 12px;
+}
+
+.red-line {
+	stroke: red;
+	stroke-width: 2px;
+}
+
+.x-line {
+	stroke: red;
+	fill: transparent;
+}
+
+.y-line {
+	stroke: green;
+	fill: transparent;
+}
+
+.z-line {
+	stroke: blue;
+	fill: transparent;
+}
+svg {
+	border: 1px dotted blue;	
+}
