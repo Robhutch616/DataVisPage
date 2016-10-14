@@ -174,13 +174,23 @@ function drawVideoLine(stream, nav=false) {
 
 	if (nav) {
 		drawLine(stream.nav, scale.invert(stream.video_start));
-		drawLine(stream.nav, scale.invert(stream.video_current));
+		drawCurrentLine(stream.nav, scale.invert(stream.video_current));
 		drawLine(stream.nav, scale.invert(stream.video_end));		
 	} else {
 		drawLine(stream, scale.invert(stream.video_start));
-		drawLine(stream, scale.invert(stream.video_current));
+		drawCurrentLine(stream, scale.invert(stream.video_current));
 		drawLine(stream, scale.invert(stream.video_end));		
 	}
+}
+
+function drawCurrentLine(stream, x) {
+	stream.svg.selectAll(".current-line").remove();
+	stream.svg.append("line")
+		.attr("class", "current-line")
+		.attr("x1", stream.hscale(x))	
+		.attr("y1", 0)
+		.attr("x2", stream.hscale(x))	
+		.attr("y2", stream.svg.attr("height")*3);
 }
 
 function drawLine(stream, x) {
@@ -237,14 +247,14 @@ function addStream(data_obj, dim_height, width) {
 				drawDim(this, dims[i], dim_height*i, false);				
 			}
 
-			drawAxis(this);
+			drawAxis(this);		
 			drawVideoLine(this);
 			drawVideoLine(this, true);
 		}	
 	}
 
+	//Nav section, drawn once
 	drawDim(stream.nav, dims[0]);
-
 	for (i=1; i<dims.length; i++) {
 		drawDim(stream.nav, dims[i], 30*i, false);				
 	}
