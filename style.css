@@ -42,6 +42,11 @@ div {
 	stroke-width: 2px;
 }
 
+.current-line {
+	stroke: purple;
+	stroke-width: 2px;
+}
+
 .x-line {
 	stroke: red;
 	fill: transparent;
