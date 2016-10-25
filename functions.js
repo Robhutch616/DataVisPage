@@ -37,11 +37,11 @@ function addVideo(src, stream) {
 
 	video.onloadedmetadata = function() {
 		stream.video_start = 100;
-		stream.video_end = video.duration;
+		stream.video_end = stream.video_start + video.duration;
 	};
 
 	video.ontimeupdate = function() {
-		stream.video_current = video.currentTime;
+		stream.video_current = stream.video_start + video.currentTime;
 		stream.update();
 	};
 }
