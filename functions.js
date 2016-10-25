@@ -36,7 +36,7 @@ function addVideo(src, stream) {
 		.node();
 
 	video.onloadedmetadata = function() {
-		stream.video_start = 0;
+		stream.video_start = 100;
 		stream.video_end = video.duration;
 	};
 
