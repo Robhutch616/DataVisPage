@@ -1,34 +1,72 @@
-function min(dim, data) {
-	//Gets the minimum dim from an array of readings (data)
-	var vals = data.map( function(obj){return obj[dim]} );
-	return Math.min(...vals);
+function plotTimeEvents(stream, timestamps) {
+	timestamps.map( function(t) {
+		drawLine(stream, t, "orange-line");
+	})
 }
 
-function max(dim, data) {
+function min(data, dim) {
+	function arrayMin(arr) {
+	  	return arr.reduce(function (p, v) {
+	    	return ( p < v ? p : v );
+	  	});
+	}
+	//Gets the minimum dim from an array of readings (data)
 	var vals = data.map( function(obj){return obj[dim]} );
-	return Math.max(...vals);
+	return arrayMin(vals);
+}
+
+function max(data, dim) {
+	function arrayMax(arr) {
+	  	return arr.reduce(function (p, v) {
+	    	return ( p > v ? p : v );
+	  	});
+	}
+	var vals = data.map( function(obj){ return obj[dim]} );
+	return arrayMax(vals);
 }
 
 function makeSvg(width, height, div_class, svg_class) {
 	return svg_axis = d3.select("."+div_class).append("svg")
-				.attr("width", width)
-				.attr("height", height)
-				.attr("class", svg_class);
+		.attr("width", width)
+		.attr("height", height)
+		.attr("class", svg_class);
 }
 
-function makeVerticalScale(data, svg, margin) {
-	var very_min = Math.min(min("x", data), min("y", data), min("z", data));
-		very_max = Math.max(max("x", data), max("y", data), max("z", data)),
-		h = svg;
-
-	if (typeof(svg) === "object") {h = svg.attr("height")};
-	var scale = d3.scaleLinear()							
-				.domain( [very_min, very_max] )				  	
-				.range( [margin, h-margin] );
-	return scale;
+function clear() {
+	s.display_main.selectAll(".blue-line").remove();
+	timestamps = [];
 }
 
-function addVideo(src, stream) {
+function makeTimeScale(data_objs, svg) {
+	var mints = data_objs.map( function(obj){return min(obj.data, "t")} ),
+		maxts = data_objs.map( function(obj){return max(obj.data, "t")} ),
+		mint = Math.min(...mints),
+		maxt = Math.max(...maxts);
+
+	return d3.scaleTime()
+		.domain( [new Date(mint), new Date(maxt)] )
+		.range( [0, svg.attr("width")] );
+}
+
+function makeVertScale(obj) {
+	var mindims = [],
+		maxdims = [];
+	obj.dims.map(function(dim) {
+		mindims.push( min(obj.data, dim) );
+		maxdims.push( max(obj.data, dim) );
+	})
+
+	var very_min = Math.min(...mindims),
+		very_max = Math.max(...maxdims);
+
+	var vscale = d3.scaleLinear()
+		.domain([very_min, very_max])
+		.range([0, 100]);
+
+	obj.vscale = vscale;
+}
+
+function addVideo(src, stream, video_start_epoch) {
 	var video = d3.select(".right").insert("video", ":first-child")
 		.attr("src", src)
 		.attr("width", 600)
@@ -36,249 +74,207 @@ function addVideo(src, stream) {
 		.node();
 
 	video.onloadedmetadata = function() {
-		stream.video_start = 100;
-		stream.video_end = stream.video_start + video.duration;
+		stream.video_start = video_start_epoch;
+		stream.video_end = video_start_epoch+video.duration*(10**3);
+		drawLine(stream, stream.video_start);
+		drawLine(stream, stream.video_end);
 	};
 
 	video.ontimeupdate = function() {
-		stream.video_current = stream.video_start + video.currentTime;
-		stream.update();
+		//console.log(video.currentTime);
+		stream.video_current = video_start_epoch+video.currentTime*(10**3);
+		drawLine(stream, stream.initial_hscale(stream.video_current), "rm", true);
 	};
 }
 
-function drawDim(stream, dim, offset=0, rm=true) {
-	var	svg = stream.svg,
-	xscale = stream.xscale,
-	yscale = stream.yscale;
+function drawDataObj(stream, obj, offset) {
+	obj.dims.map( function(dim, i) {
+		drawDataObjDim(stream, obj, dim, offset+i*obj.vscale.range()[1]+10);
+	})
+}
 
-	if (rm) {
-		svg.selectAll("line").remove();
-		svg.selectAll("circle").remove();
-		svg.selectAll("path").remove();		
-	}
-	
+function drawDataObjDim(stream, obj, dim, offset, rm=true) {
 	var line = d3.line()
 		.x(function(d){ return stream.hscale(d.t) })
-		.y(function(d){ return stream.vscale(d[dim])+offset });
+		.y(function(d){ return obj.vscale(d[dim])+offset });
 
-	svg.append("path")
-		.attr("class", dim+"-line")
-		.attr("d", line(stream.data));
+	stream.display_main.select(".line-group")
+		.append("path")
+		.attr("vector-effect", "non-scaling-stroke")
+		.attr("class", "data-line "+dim)
+		.attr("d", line( obj.data ));	
 }
 
-function drawAxis(stream) {
-	var ticks = stream.axis.num_ticks,
-		svg = stream.axis.svg,
-		xscale = stream.hscale;
+function zoom_group(stream) {
+	var transform = d3.event.transform;
+	var g = stream.display_main.select(".line-group");
 
-	var axis = d3.axisBottom(xscale)
-			.ticks(ticks)
-			.tickFormat(function (d) {
-				//return styleTicks(d, stream);
-				var hrs = parseInt(d*(10**-9)/3600),
-					mins = parseInt(d*(10**-9)/60) - hrs*60,
-					secs = parseInt(d*(10**-9)).toFixed(2) - (mins*60 + hrs*3600)
-					msecs = parseInt(d*(10**-6)).toFixed(3) - 1000*(secs + mins*60 + hrs*3600);
-			 	return mins+":"+secs+"."+msecs;
-			});
+	//Limit translating
+	//console.log(transform.x, transform.x/transform.k);
 
-	axis(svg);
+	if (transform.x > 10) transform.x = 10;	
+	else if (transform.x/transform.k < -stream.width) transform.x = -stream.width*transform.k;
+
+	//Changing scale
+	stream.hscale.range([transform.x, transform.x+(stream.width*transform.k)]);
+
+	//Saving current transform 	
+	stream.transform = transform;
+
+	//Transform line group by current event transform 
+	g.attr("transform", "translate(" + transform.x + "," + 0 + ") scale(" + transform.k + "," + 1 + ")");
+	stream.update_axis();
 }
 
-function styleTicks(d, stream) {
-	//helper	
-	function pad_zeros(num, size) {
-	    var s = "000000000" + num;
-	    return s.substr(s.length-size);
-	}
+function drawLine(stream, x, css_class="red-line", use_actual_x=false) {
+	stream.display_main.selectAll(".rm").remove();
 
-	var all_secs = stream.stampsToSecs(d);
-		mins = parseInt(all_secs/60),
-		secs = parseInt(all_secs - mins*60);
-		//msecs = parseInt(all_secs/1000) - 1000*(secs+mins*60);
-
-	return mins+":"+pad_zeros(secs, 2);
-}
-
-function stampsToSecs(stream, t) {
-	var data = stream.data,
-		diff = max("t", data) - min("t", data);
-
-	return d3.scaleLinear()
-		.domain([min("t", data), max("t", data)])
-		.range([0, diff*(10**-9)])(t);
-}
-
-function zoomed(stream, brush) {
-	//Change the scale functions
-	if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return;
-	var pvals = d3.event.transform,
-		half_dist = (pvals.k*stream.width*2)/2;
-
-	var left = pvals.x-half_dist,
-		right = pvals.x+half_dist;
-
-	stream.hscale.range([left, right]);
-
-	var scale = d3.scaleLinear()							
-			.domain([pvals.x-half_dist, pvals.x+half_dist])				  	
-			.range([0, stream.width]);
-
-	//TODO: limit how small the brush can be
-	var all_navs = d3.select(".right").selectAll("svg");
-
-	//update brush position
-	brush.move(stream.nav.svg, [scale(0), scale(stream.width)]);
-
-	stream.axis.num_ticks = pvals.k*10;
-	stream.update();
-}
-
-function brushed(stream, zoom) {
-	//Change the scale functions
-	if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
-	var brush_min = d3.event.selection[0],
-		brush_max = d3.event.selection[1],
-		half_width = stream.width/2,
-		s = d3.event.selection;
-
-	var scale = d3.scaleLinear()							
-	 	.domain([brush_min, brush_max])				  	
-	 	.range([0, stream.width]);
-
-	stream.brush_coords = [brush_min, brush_max]; 
-	stream.hscale.range([scale(0), scale(stream.width)]);
-	
-	//Update svg's zoom transform to show changes made by brush	
-	var all_svgs = d3.select(".left").selectAll("svg");
-	var all_navs = d3.select(".right").selectAll("svg");
-
-
-	stream.svg.call(zoom.transform, d3.zoomIdentity
-								.scale(half_width/(s[1]-s[0]))
-								.translate(stream.width-2*s[0], 0)	
-	);
-
-	stream.axis.ticks = (half_width/(s[1]-s[0]))*10;
-	stream.update();
-}
-
-function drawVideoLine(stream, nav=false) {
-	//
-	var data = stream.data,
-		diff = max("t", data) - min("t", data);
-
-	var scale =  d3.scaleLinear()
-		.domain([min("t", data), max("t", data)])
-		.range([0, diff*(10**-9)]);
-
-	if (nav) {
-		drawLine(stream.nav, scale.invert(stream.video_start));
-		drawCurrentLine(stream.nav, scale.invert(stream.video_current));
-		drawLine(stream.nav, scale.invert(stream.video_end));		
+	var g = stream.display_main.select(".line-group");
+	var line = null;
+	if (!use_actual_x) {
+		line = g.append("line")
+			.attr("class", css_class)
+			.attr("vector-effect", "non-scaling-stroke")
+			.attr("x1", stream.hscale(x))	
+			.attr("y1", 0)
+			.attr("x2", stream.hscale(x))	
+			.attr("y2", stream.display_main.attr("height")*3);
 	} else {
-		drawLine(stream, scale.invert(stream.video_start));
-		drawCurrentLine(stream, scale.invert(stream.video_current));
-		drawLine(stream, scale.invert(stream.video_end));		
-	}
-}
-
-function drawCurrentLine(stream, x) {
-	stream.svg.selectAll(".current-line").remove();
-	stream.svg.append("line")
-		.attr("class", "current-line")
-		.attr("x1", stream.hscale(x))	
-		.attr("y1", 0)
-		.attr("x2", stream.hscale(x))	
-		.attr("y2", stream.svg.attr("height")*3);
-}
-
-function drawLine(stream, x) {
-	stream.svg.append("line")
-		.attr("class", "red-line")
-		.attr("x1", stream.hscale(x))	
-		.attr("y1", 0)
-		.attr("x2", stream.hscale(x))	
-		.attr("y2", stream.svg.attr("height")*3);
-}
-
-function addStream(data_obj, dim_height, width) {
-	//Necessary to initiate one 
-	var	dims = Object.keys(data_obj.data[0]).slice(1, Object.keys(data_obj.data[0]).length),	
-		num_dims = dims.length;
-
-	var svg_nav = makeSvg(width, 30*num_dims, "right"),
-		svg_main = makeSvg(width, dim_height*num_dims, "left");
-		
-	var stream = 
-	{
-		dim_height: dim_height,
-		width: width,
-
-		data: data_obj.data,
-		svg: svg_main,
-		hscale: d3.scaleLinear()							
-			.domain( [min("t", data_obj.data), max("t", data_obj.data)] )				  	
-			.range( [0, width] ),
-		vscale: makeVerticalScale(data_obj.data, dim_height, 30),
-		
-		video_start: null,
-		video_end: null,
-		video_current: null,
-
-		nav: {
-			data: data_obj.data,			
-			hscale: d3.scaleLinear()							
-				.domain( [min("t", data_obj.data), max("t", data_obj.data)] )				  	
-				.range( [0, width] ),
-			vscale: makeVerticalScale(data_obj.data, 30, 5),			
-			svg: svg_nav,
-		},
-
-		axis: {
-			svg: makeSvg(width, 20, "left"),
-			num_ticks: 10,
-		},	
-
-		update: function() {
-			drawDim(this, dims[0]);
-
-			for (i=1; i<dims.length; i++) {
-				drawDim(this, dims[i], dim_height*i, false);				
-			}
-
-			drawAxis(this);		
-			drawVideoLine(this);
-			drawVideoLine(this, true);
-		}	
+		line = g.append("line")
+			.attr("class", css_class)
+			.attr("vector-effect", "non-scaling-stroke")
+			.attr("x1", x)	
+			.attr("y1", 0)
+			.attr("x2", x)	
+			.attr("y2", stream.display_main.attr("height")*3);
 	}
 
-	//Nav section, drawn once
-	drawDim(stream.nav, dims[0]);
-	for (i=1; i<dims.length; i++) {
-		drawDim(stream.nav, dims[i], 30*i, false);				
-	}
+	return line;
+}
 
-	stream.update();
-
+function associateBehaviors(stream) {
 	var zoom;
-	var brush;
-
-	brush = d3.brushX()
-		.on("brush", function() {
-			brushed(stream, zoom)
-		});
-
 
 	zoom = d3.zoom()
+		.scaleExtent([1, 600])
 		.on("zoom", function() {
-			zoomed(stream, brush);
+			zoom_group(stream);				
 		});
-
-	zoom(stream.svg);
-	brush(stream.nav.svg);
 	
-	return stream;
+	zoom(stream.display_main);
+
+	document.addEventListener("mousedown", function() {
+		if (event.altKey) stream.display_main.on(".zoom", null);
+	}, true);
+
+	document.addEventListener("mouseup", function() {
+		if (event.altKey) {
+			zoom(stream.display_main);
+		}	
+	}, true);
 }
+
+function Stream(data_obj, dim_height, width, implementation="svg") {
+	//A list of all the column names except t
+	dims = Object.keys(data_obj.data[5]);
+	var t_index = dims.indexOf("t");
+	dims.splice(dims.indexOf("t"), 1);
+	
+	//Define stream properties
+	this.width = width;
+
+	this.transform = {x:0, k:1};
+
+	this.display_main = implementation === "svg" ? 
+		makeSvg(width, dim_height*14, "left", "display-main")
+		: makeCanvas(width, dim_height*this.dims.length, "left");
+	
+	this.initial_hscale = d3.scaleLinear()							
+		.domain( [min(data_obj.data, "t"), max(data_obj.data, "t")] )				  	
+		.range( [0, width] );
+
+	this.axis = d3.axisBottom(this.hscale);
+	this.display_axis = makeSvg(width, 30, "left", "axis");
+
+	this.data_objs = [myo_accel_obj, watch_obj]; //also myo_emg_obj
+	this.hscale = makeTimeScale(this.data_objs, this.display_main);
+
+	this.video_start = null;
+	this.video_current = null;
+	this.video_end = null;
+
+	this.draw = function() {
+		var dims = 0;
+		var obj_offset = 0;
+		for (i in this.data_objs) {
+			drawDataObj(this, this.data_objs[i], obj_offset);
+			obj_offset += this.data_objs[i].dims.length * this.data_objs[i].vscale.range()[1]+10;
+		}
+	}
+
+	this.update_axis = function() {
+		var hscale_range = this.hscale.range()[1] - this.hscale.range()[0];
+		var num_ticks = hscale_range/180; 
+		if (num_ticks > 550) num_ticks = 550;
+		this.axis = d3.axisBottom(this.hscale)
+			.ticks(num_ticks);
+			
+		this.axis(this.display_axis);
+	}
+
+	this.display_axis.insert("rect", ":first-child")
+		.attr("x", 0)
+		.attr("y", 0)
+		.attr("width", this.display_axis.attr("width"))
+		.attr("height", this.display_axis.attr("height"))
+		.attr("fill", "rgb(255, 255, 255)");
+
+	//add a vertical scale to each data object
+	this.data_objs.map( function(obj) {makeVertScale(obj)} );
+	this.display_main.append("g").attr("class", "line-group");
+
+	this.update_axis();
+	//add zoom behaviour 	
+	associateBehaviors(this);
+
+	addVideo("AntonPhysio/17_11_16/3/VIDEO_17-11-16_10-19-55-188.mp4", this, 1479378002766);
+
+	plotTimeEvents(this, [
+		1479377935295,
+		1479377939007,
+		1479378002766,
+		1479378112028,
+		1479378115467,
+		1479378134858,
+		1479378154917,
+		1479378193385,
+		1479378226502,
+		1479378236816,
+		1479378267359,
+		1479378314143,
+		1479378343105,
+		1479378383145,
+		1479378415500,
+		1479378448909,
+		1479378479190,
+		1479378560226,
+		1479378590144,
+		1479378674668,
+		1479378701081,
+		1479378772511,
+		1479378799701,
+		1479378839306,
+		1479378865370,
+		1479378933775,
+		1479378974632,
+		1479378998097,
+		1479379029372,
+		1479379050862,
+		1479379094948,
+		1479379109854
+	]);
+}
+
+
 
 

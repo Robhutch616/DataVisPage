@@ -1,23 +1,47 @@
-div {
-	width: 600px;
-	border: 1px dotted red;	
+/*svg {
+	border: 4px dotted red;	
 }
 
-.right {
+video {
 	float: left;
-	position: relative;
-	height: 800px;
+	border: 5px solid orange;	
 }
+
+div {
+	border: 4px dotted blue;
+}
+*/
+/*---------------*/
+.key-svg {
+	float: left;
+}
+
 
 .left {
 	float: left;
-	height: 800px;
+	position: relative;
+	top: 30;
 }
 
-.stream-div {
-	position: relative;
-/*	top: -310px;
-*/	width: 600px;
+body {
+	background-color: white;
+}
+
+.axis {
+	position: fixed;
+	bottom: 0;
+	left: 10;
+}
+
+.annotations {
+	position: fixed;
+	top: 0;
+}
+
+.right {
+	width: 700px;
+	right: 0;
+	position: fixed;
 }
 
 .grid-line {
@@ -26,42 +50,48 @@ div {
 	stroke-width: 0.5px;
 }
 
-.data-line {
-	fill: transparent;
-	stroke: RoyalBlue;
-}
-
-.axis text {
-	font-weight: bold;
-    font-family: sans-serif;
-    font-size: 12px;
-}
-
 .red-line {
 	stroke: red;
 	stroke-width: 2px;
 }
 
-.current-line {
-	stroke: purple;
-	stroke-width: 2px;
+.blue-line {
+	stroke-width: 1px;
 }
 
-.x-line {
+.line-rect:hover {
+	cursor: ew-resize;
+}
+
+.orange-line {
+	stroke: orange;
+	stroke-width: 1px;
+}
+
+.rm {
+	stroke: red;
+	stroke-width: 1px;
+}
+
+.data-line.x {
 	stroke: red;
 	fill: transparent;
 }
 
-.y-line {
+.data-line.y {
 	stroke: green;
 	fill: transparent;
 }
 
-.z-line {
+.data-line.z {
 	stroke: blue;
 	fill: transparent;
 }
 
-svg {
-	border: 1px dotted blue;	
+.data-line {
+	stroke: purple;
+	fill: transparent;
 }
+
+
+
