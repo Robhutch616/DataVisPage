@@ -57,7 +57,6 @@ function makeTimeScale(data_objs, svg) {
 		.range( [0, svg.attr("width")] );
 }
 
-
 function makeVertScale(obj, upper_pixels) {
 	var mindims = [],
 		maxdims = [];
@@ -76,6 +75,23 @@ function makeVertScale(obj, upper_pixels) {
 	obj.vscale = vscale;
 }
 
+function redrawVideoTime() {
+	console.log("redrawing video time...")
+	var tval = parseFloat(d3.select(".text-input").node().value);
+	//Update stream video properties
+	stream.video_start = tval;
+	stream.video_end = tval+stream.video.duration*Math.pow(10,3);
+	
+	//Remove all current video time lines
+	d3.selectAll(".red-line").nodes().map(function(node){node.remove()});
+	console.log(stream.video_start, stream.video_end);
+	
+	if (tval !== undefined && stream.display_main !== null && tval !== NaN) {
+		drawLine(stream, stream.video_start);
+		drawLine(stream, stream.video_end);
+	}
+}
+
 function addVideo(src, stream, video_start_epoch) {
 	var video = d3.select(".right").insert("video", ":first-child")
 		.attr("src", src)
@@ -83,16 +99,24 @@ function addVideo(src, stream, video_start_epoch) {
 		.attr("controls", 1)
 		.node();
 
+	stream.video = video;
+
+	var video_start_input = d3.select(".right").insert("input", ":first-child")
+		.attr("class", "text-input")
+		.attr("type", "text")
+		.attr("oninput", "redrawVideoTime()");
+
 	video.onloadedmetadata = function() {
 		stream.video_start = video_start_epoch;
 		stream.video_end = video_start_epoch+video.duration*Math.pow(10,3);
-		drawLine(stream, stream.video_start);
-		drawLine(stream, stream.video_end);
+		redrawVideoTime();
 	};
 
 	video.ontimeupdate = function() {
-		stream.video_current = video_start_epoch+video.currentTime*Math.pow(10, 3);
-		drawLine(stream, stream.initial_hscale(stream.video_current), "rm", true);
+		stream.video_current = stream.video_start+video.currentTime*Math.pow(10, 3);
+		if (stream.display_main !== null) {
+			drawLine(stream, stream.initial_hscale(stream.video_current), "rm", true);
+		}
 	};
 }
 
@@ -316,7 +340,7 @@ function drawRect(center_x, width, rect_class) {
 function createStatusSvg(stream) {
 	var key_svg = d3.select(".right").append("svg")
         .attr("width", 500)
-        .attr("height", 300)
+        .attr("height", 50)
         .attr("class", "key-svg");
 
     key_svg.append("text")
@@ -501,7 +525,7 @@ function Stream(data_objs, dim_height, between_objs, width) {
 	this.video_end = null;
 
 	this.update = function() {
-		d3.select(".left").selectAll("*");	
+		//d3.select(".left").selectAll("*");	
 		updatePropsFromDataObjs(this);
 
 		var obj_offset = 0;
