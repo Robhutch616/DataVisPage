@@ -102,7 +102,13 @@ function addVideo(src, stream, video_start_epoch) {
 	var video_start_input = d3.select(".right").insert("input", ":first-child")
 		.attr("class", "text-input")
 		.attr("type", "text")
+		.attr("id", "video_start_input")
 		.attr("oninput", "redrawVideoTime()");
+
+	var video_start_label = d3.select(".right").insert("label", ":first-child")
+		.attr("for", "video_start_input")
+		.text("Enter video start timestamp: ");
+
 
 	video.onloadedmetadata = function() {
 		stream.video_start = video_start_epoch;
@@ -343,9 +349,9 @@ function createStatusSvg(stream) {
     key_svg.append("text")
         .attr("class", "key-text")
         .text("Current label: "+stream.current_label)
-        .attr("x", 0)
-        .attr("y", 35)
-        .attr("font-size", 35);
+        .attr("x", 8)
+        .attr("y", 25)
+        .attr("font-size", 25);
 
     key_svg.append("rect")
         .attr("class", "key-rect")
@@ -553,11 +559,15 @@ function Stream(data_objs, dim_height, between_objs, width) {
 			.attr("height", this.display_axis.attr("height"))
 			.attr("class", "white-rect");
 
+		//TODO modify a copy of hscale when transforming, use it for ticks
+		
 		//num_ticks is calculated
 		var hscale_range = this.hscale.range()[1] - this.hscale.range()[0];
 		var num_ticks = hscale_range/160; 
+		if (num_ticks > 400) {num_ticks = 400};
 		this.axis.ticks(num_ticks);
 
+		//axis is rendered to current display_axis
 		this.axis(this.display_axis);
 	}
 
@@ -565,7 +575,7 @@ function Stream(data_objs, dim_height, between_objs, width) {
 	this.data_objs.map( function(obj) {makeVertScale(obj, dim_height)} );
 	this.display_main.append("g").attr("class", "line-group");
 
-	this.update_axis();
+	// this.update_axis();
 
 	//Independent of data
 	createStatusSvg(this);	

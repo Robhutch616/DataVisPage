@@ -1,7 +1,7 @@
 svg {
 	width: 100%;
-	border: 3px dotted red;	
-}
+/*	border: 2px dotted red;	
+*/}
 
 
 video {
@@ -12,8 +12,19 @@ video {
 
 
 div {
-	border: 4px dotted blue;
+	font-family: "Courier New";
 }
+
+p {
+	font-family: "Courier New";
+	font-size: 15px;	
+}
+
+label {
+	font-family: "Courier New";
+	font-size: 15px;	
+}
+
 
 /*---------------*/
 * {
@@ -25,7 +36,7 @@ div {
 }
 
 .left {
-	width: 65%;
+	width: 64%;
 	float: left;
 /*	position: relative
 */
@@ -39,7 +50,8 @@ div {
 
 .right {
 	width: 35%;
-	right: 0;
+	height: 98%;
+	right: 8;
 	position: fixed;
 
 	color: #ccc;
@@ -51,10 +63,10 @@ div {
 }
 
 .axis {
-	width: 663px;
+	width: 64.1%;
 	position: fixed;
 	bottom: 0;
-	left: 12;
+	left: 8;
 }
 
 .white-rect {
