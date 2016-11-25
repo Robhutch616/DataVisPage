@@ -85,13 +85,13 @@ function addVideo(src, stream, video_start_epoch) {
 
 	video.onloadedmetadata = function() {
 		stream.video_start = video_start_epoch;
-		stream.video_end = video_start_epoch+video.duration*(10**3);
+		stream.video_end = video_start_epoch+video.duration*Math.pow(10,3);
 		drawLine(stream, stream.video_start);
 		drawLine(stream, stream.video_end);
 	};
 
 	video.ontimeupdate = function() {
-		stream.video_current = video_start_epoch+video.currentTime*(10**3);
+		stream.video_current = video_start_epoch+video.currentTime*Math.pow(10, 3);
 		drawLine(stream, stream.initial_hscale(stream.video_current), "rm", true);
 	};
 }
@@ -189,8 +189,8 @@ function drawLine(stream, x, css_class="red-line", use_actual_x=false) {
 
 function Annotation(stream, click_event, text) {
     this.label = text;
-    this.first_line = new AnnotationLine(stream, click_event, text);
-    this.second_line = new AnnotationLine(stream, click_event, text);
+    this.first_line = new AnnotationLine(stream, click_event, text, this);
+    this.second_line = new AnnotationLine(stream, click_event, text, this);
 
     this.first_line.other_line = this.second_line;
     this.second_line.other_line = this.first_line;
@@ -205,8 +205,11 @@ function Annotation(stream, click_event, text) {
     }
 }
 
-function AnnotationLine(stream, click_event, label) {
+function AnnotationLine(stream, click_event, label, parent_annotation) {
     var this_line = this;
+    //So that when the line is deleted its Annotation() is too
+    this.annotation = parent_annotation;
+    
     this.label = label;
     this.x = (click_event.offsetX-stream.transform.x)/stream.transform.k;
     this.timestamp = null;
@@ -284,6 +287,10 @@ function AnnotationLine(stream, click_event, label) {
             this.other_line.deleted = true;
             this.other_line.delete();            
         }
+
+        var anno_index = stream.annotations.indexOf(this.annotation);
+        console.log(anno_index);
+        if (anno_index !== -1) {stream.annotations.splice(anno_index, 1)};
     }
 
     this.update(click_event.offsetX);
@@ -331,7 +338,9 @@ function createStatusSvg(stream) {
 
 function bindKeyListeners(stream) {
 	d3.select("body").on("keydown", function(){
-        if (d3.event.key === "Delete") {stream.selected_line.delete();}
+        if (d3.event.key === "Delete") {
+        	stream.selected_line.delete();
+        }
         if (d3.event.code.includes("Digit")) {
             stream.current_label = d3.event.key;
             d3.select(".key-text").text("Current label: "+stream.current_label);
@@ -372,10 +381,9 @@ function makeLabelsString(stream) {
         var start = annotation.first_line.timestamp,
             finish = annotation.second_line.timestamp;
 
-        labels_string +=    start + " " +
-                            finish + " " +
-                            annotation.label + "\n";
+        labels_string +=    start + " " + finish + " " + annotation.label + "\n";
     })
+    console.log(labels_string);
     return labels_string;
 }
 
