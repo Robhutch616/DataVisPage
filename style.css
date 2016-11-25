@@ -1,0 +1,116 @@
+svg {
+	width: 100%;
+	border: 3px dotted red;	
+}
+
+
+video {
+	width: 100%;
+	float: left;
+	border: 5px solid orange;	
+}
+
+
+div {
+	border: 4px dotted blue;
+}
+
+/*---------------*/
+* {
+    box-sizing: border-box;
+}
+
+.key-svg {
+	float: left;
+}
+
+.left {
+	width: 65%;
+	float: left;
+/*	position: relative
+*/
+	color: #ccc;
+	border-style: dashed;
+	border-color: #ccc;
+/*	line-height: 50px;
+*/	text-align: center;
+	font-size: 40px;
+}
+
+.right {
+	width: 35%;
+	right: 0;
+	position: fixed;
+
+	color: #ccc;
+	border-style: dashed;
+	border-color: #ccc;
+/*	line-height: 50px;
+*/	text-align: center;
+	font-size: 40px;
+}
+
+.axis {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+}
+
+.red-line {
+	stroke: red;
+	stroke-width: 2px;
+}
+
+.blue-line {
+	stroke-width: 1px;
+}
+
+.line-rect:hover {
+	cursor: ew-resize;
+}
+
+.orange-line {
+	stroke: orange;
+	stroke-width: 1px;
+}
+
+.rm {
+	stroke: red;
+	stroke-width: 1px;
+}
+
+.data-line.a {
+	stroke: red;
+	fill: transparent;
+}
+
+.data-line.b {
+	stroke: green;
+	fill: transparent;
+}
+
+.data-line.c {
+	stroke: blue;
+	fill: transparent;
+}
+
+.data-line {
+	opacity: 0.8;
+	stroke: purple;
+	fill: transparent;
+}
+
+.zero-line {
+	opacity: 0.7;
+	stroke: gray;
+	fill: transparent;	
+}
+
+.boundary-line {
+	stroke: red;
+	fill: transparent;	
+}
+
+
+
+
