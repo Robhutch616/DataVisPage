@@ -51,9 +51,14 @@ div {
 }
 
 .axis {
+	width: 663px;
 	position: fixed;
 	bottom: 0;
-	left: 0;
+	left: 12;
+}
+
+.white-rect {
+	fill: #fff;
 }
 
 .red-line {

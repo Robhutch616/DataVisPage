@@ -409,7 +409,6 @@ function makeLabelsString(stream) {
         } else {
         	labels_string += start+" "+finish+" "+annotation.label+"\n";
         }
-
     })
     
     return labels_string;
@@ -518,10 +517,10 @@ function Stream(data_objs, dim_height, between_objs, width) {
 	this.display_main = makeSvg(width, dim_height*total_dims+between_objs*data_objs.length, "left", "display-main");
 	this.initial_hscale = makeTimeScale(this.data_objs, this.display_main);
 
-	// this.axis = d3.axisBottom(this.hscale);
-	// this.display_axis = makeSvg(width, 30, "left", "axis");
-
 	this.hscale = makeTimeScale(this.data_objs, this.display_main);
+
+	this.axis = d3.axisBottom(this.hscale);
+	this.display_axis = makeSvg(width, 30, "left", "axis");
 
 	this.video_start = null;
 	this.video_current = null;
@@ -536,24 +535,31 @@ function Stream(data_objs, dim_height, between_objs, width) {
 			drawDataObj(this, this.data_objs[i], obj_offset);
 			obj_offset += this.data_objs[i].dims.length * this.data_objs[i].vscale.range()[1]+this.between_objs;
 		}
+
+		this.axis = d3.axisBottom(this.hscale);
+		this.update_axis();
 	}
 
 	this.update_axis = function() {
-		// var hscale_range = this.hscale.range()[1] - this.hscale.range()[0];
-		// var num_ticks = hscale_range/180; 
-		// if (num_ticks > 550) num_ticks = 550;
-		// this.axis = d3.axisBottom(this.hscale)
-		// 	.ticks(num_ticks);
-			
-		// this.axis(this.display_axis);
-	}
+		//A white rectangle is painted first on display_axis 
+		//removed on each update 
+		if (this.display_axis.select(".white-rect").node() !== null) {
+			this.display_axis.select(".white-rect").node().remove()
+		};
+		this.display_axis.insert("rect", ":first-child")
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("width", this.display_axis.attr("width"))
+			.attr("height", this.display_axis.attr("height"))
+			.attr("class", "white-rect");
 
-	// this.display_axis.insert("rect", ":first-child")
-	// 	.attr("x", 0)
-	// 	.attr("y", 0)
-	// 	.attr("width", this.display_axis.attr("width"))
-	// 	.attr("height", this.display_axis.attr("height"))
-	// 	.attr("fill", "rgb(255, 255, 255)");
+		//num_ticks is calculated
+		var hscale_range = this.hscale.range()[1] - this.hscale.range()[0];
+		var num_ticks = hscale_range/160; 
+		this.axis.ticks(num_ticks);
+
+		this.axis(this.display_axis);
+	}
 
 	//add a vertical scale to each data object
 	this.data_objs.map( function(obj) {makeVertScale(obj, dim_height)} );
