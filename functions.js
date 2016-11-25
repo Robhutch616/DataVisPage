@@ -76,7 +76,6 @@ function makeVertScale(obj, upper_pixels) {
 }
 
 function redrawVideoTime() {
-	console.log("redrawing video time...")
 	var tval = parseFloat(d3.select(".text-input").node().value);
 	//Update stream video properties
 	stream.video_start = tval;
@@ -84,7 +83,6 @@ function redrawVideoTime() {
 	
 	//Remove all current video time lines
 	d3.selectAll(".red-line").nodes().map(function(node){node.remove()});
-	console.log(stream.video_start, stream.video_end);
 	
 	if (tval !== undefined && stream.display_main !== null && tval !== NaN) {
 		drawLine(stream, stream.video_start);
@@ -313,7 +311,6 @@ function AnnotationLine(stream, click_event, label, parent_annotation) {
         }
 
         var anno_index = stream.annotations.indexOf(this.annotation);
-        console.log(anno_index);
         if (anno_index !== -1) {stream.annotations.splice(anno_index, 1)};
     }
 
@@ -400,14 +397,21 @@ function bindMouseListeners(stream) {
 
 
 function makeLabelsString(stream) {    
-    labels_string = "";
+    var labels_string = "";
+    console.log("making string...")
     stream.annotations.map(function(annotation) {
-        var start = annotation.first_line.timestamp,
-            finish = annotation.second_line.timestamp;
+        var start = parseFloat(annotation.first_line.timestamp),
+            finish = parseFloat(annotation.second_line.timestamp);
 
-        labels_string +=    start + " " + finish + " " + annotation.label + "\n";
+    	//Make sure start comes before finish in text file
+        if (finish < start) {
+	        labels_string += finish+" "+start+" "+annotation.label+"\n";
+        } else {
+        	labels_string += start+" "+finish+" "+annotation.label+"\n";
+        }
+
     })
-    console.log(labels_string);
+    
     return labels_string;
 }
 
@@ -417,10 +421,9 @@ function createOutputButton(stream) {
         .text("Download labels"); 
 
     output_button.node().addEventListener("click", function() {
-        makeLabelsString(stream);
         var link = document.createElement('a');
         link.setAttribute('download', 'labels.txt');
-        link.href = makeTextFile(labels_string);
+        link.href = makeTextFile(makeLabelsString(stream));
         document.body.appendChild(link);
 
         // wait for the link to be added to the document

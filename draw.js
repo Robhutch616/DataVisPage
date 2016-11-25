@@ -1,5 +1,6 @@
 var textFile = null;
 var makeTextFile = function (text) {
+    console.log(text);
     var data = new Blob([text], {type: 'text/plain'});
 
     // If we are replacing a previously generated file we need to
