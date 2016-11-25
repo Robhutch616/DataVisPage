@@ -1,9 +1,5 @@
 # DataVisPage
 
-Page to view the DataVis app
+A public repo for storing code for the data visualisation app
 
-Go to https://antonivlev.github.io/DataVisPage/
-
-Video hosted on: https://dl.dropboxusercontent.com/s/dcsj9gfntynrmkf/20160914_165116.mp4?dl=0
-
-yarr
+app: https://robhutch616.github.io/HARNIS-Viewer/
