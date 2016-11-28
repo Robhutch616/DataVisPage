@@ -470,6 +470,34 @@ function updatePropsFromDataObjs(stream) {
 	bindMouseListeners(stream);
 }
 
+function drawGrid(stream) {
+	var x_coords = Array.apply(null, {length: 200}).map(Number.call, Number);
+	var y_coords = Array.apply(null, {length: 20}).map(Number.call, Number);
+	x_coords = x_coords.map(function(n) { return n*(3*stream.display_main.attr("width")/200) });
+	y_coords = y_coords.map(function(n) { return n*(stream.display_main.attr("height")/20) });
+	//Draw horizontal lines
+	stream.display_main.select(".line-group").selectAll()
+		.data(x_coords)
+	.enter().insert("line", ":first-child")
+		.attr("x1", function(d){return d})
+		.attr("y1", 0)
+		.attr("x2", function(d){return d})
+		.attr("y2", stream.display_main.attr("height"))
+		.attr("class", "grid-line")
+		.attr("vector-effect", "non-scaling-stroke");
+
+	//Draw vertical lines
+	// stream.display_main.select(".line-group").selectAll()
+	// 	.data(y_coords)
+	// .enter().insert("line", ":first-child")
+	// 	.attr("x1", 0)
+	// 	.attr("y1", function(d){return d})
+	// 	.attr("x2", stream.display_main.attr("width")*3)
+	// 	.attr("y2", function(d){return d})
+	// 	.attr("class", "grid-line")
+	// 	.attr("vector-effect", "non-scaling-stroke");
+}
+
 //==============================================================================
 
 
@@ -544,6 +572,7 @@ function Stream(data_objs, dim_height, between_objs, width) {
 
 		this.axis = d3.axisBottom(this.hscale);
 		this.update_axis();
+		drawGrid(this);
 	}
 
 	this.update_axis = function() {

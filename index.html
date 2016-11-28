@@ -31,11 +31,25 @@
 		<!--<input type="file" id="files" name="files[]" multiple />!-->
 
 		<div id="data_drop" class="left">
-			Drop data here
+			Drop data files here
+			<p>
+			.txt files, space separated values, example data format:<br><br>
+			-0.019531	-1.017578	-0.053711	1479377932432.00<br>
+			-0.010742	-1.016602	-0.058594	1479377932452.41<br>
+			-0.006836	-1.020020	-0.045898	1479377932472.82<br>
+			-0.001953	-1.018555	-0.053711	1479377932493.22<br>
+			-0.013672	-1.020508	-0.050293	1479377932513.63<br>
+			-0.007813	-1.016602	-0.054199	1479377932534.04<br>
+			<br><br>
+			Any number of dimensions as long as timestamp is last. Dropping data overwrites any
+			previous data and labels. 
+			</p> 
+
 		</div>
 
 		<div id="video_drop" class="right">
 			Drop video here
+			<p>Press number keys to change label. Click on plot to make a label.</p>
 		</div>
 				
 		<!--<script src="addBrushes.js"></script>-->
