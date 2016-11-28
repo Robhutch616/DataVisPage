@@ -25,7 +25,7 @@ var makeTextFile = function (text) {
 //=================================================================
 var files_contents = {};
 var json_objs = [];
-var stream = new Stream(json_objs, 100, 40, 900);
+var stream = new Stream(100, 40, 900);
 
 // Setup the drag and drop listeners.
 var dataDrop = document.getElementById('data_drop');
@@ -37,12 +37,24 @@ videoDrop.addEventListener('dragover', handleDragOver, false);
 videoDrop.addEventListener('drop', handleVideoDrop, false);
 
 function updateStreamWith(files_contents) {
-    json_objs = [];
+    var stream_data_objs = [];
+    var event_timestamps = [];
     //Converts each file in files_contents to a json object
     //and pushes it to json_objs
     for (file_name in files_contents) {
-        raw_string = files_contents[file_name];
-        line_list = raw_string.split("\n");
+        var raw_string = files_contents[file_name];
+        var line_list = raw_string.split("\n");
+        var split_line = line_list[0].split("\t");
+
+        //if time events data (it only has one column)
+        if (split_line.length === 1) {
+            stream.time_events = line_list.map(function(t) { 
+                var num = parseFloat(t)
+                if (typeof(num) === "number") {return num;} 
+            });
+            // console.log(stream.time_events);
+            continue;
+        }
 
         var json_obj = {
             "dims": alphabet_list.slice(0, line_list[0].split("\t").length - 1),
@@ -66,11 +78,11 @@ function updateStreamWith(files_contents) {
                 json_obj["data"].push(reading)
             }
         });
-        json_objs.push(json_obj);
+        stream_data_objs.push(json_obj);
     }   
 
     //Updates stream
-    stream.data_objs = json_objs;
+    stream.data_objs = stream_data_objs;
     stream.update();
 }
 

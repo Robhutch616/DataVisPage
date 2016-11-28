@@ -186,7 +186,7 @@ function zoom_group(stream) {
 
 	//Transform line group by current event transform 
 	g.attr("transform", "translate(" + transform.x + "," + 0 + ") scale(" + transform.k + "," + 1 + ")");
-	stream.update_axis();
+	stream.updateAxis();
 }
 
 function drawLine(stream, x, css_class="red-line", use_actual_x=false) {
@@ -471,9 +471,9 @@ function updatePropsFromDataObjs(stream) {
 }
 
 function drawGrid(stream) {
-	var x_coords = Array.apply(null, {length: 200}).map(Number.call, Number);
+	var x_coords = Array.apply(null, {length: 400}).map(Number.call, Number);
 	var y_coords = Array.apply(null, {length: 20}).map(Number.call, Number);
-	x_coords = x_coords.map(function(n) { return n*(3*stream.display_main.attr("width")/200) });
+	x_coords = x_coords.map(function(n) { return n*(3*stream.display_main.attr("width")/300) });
 	y_coords = y_coords.map(function(n) { return n*(stream.display_main.attr("height")/20) });
 	//Draw horizontal lines
 	stream.display_main.select(".line-group").selectAll()
@@ -498,26 +498,30 @@ function drawGrid(stream) {
 	// 	.attr("vector-effect", "non-scaling-stroke");
 }
 
-//==============================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function drawTimeEvents(stream) {
+	console.log(stream.time_events);
+	stream.time_events.map(function(t) {
+		drawLine(stream, t, "event-line");
+	})
+}
 
 //==============================================================================
 
-function Stream(data_objs, dim_height, between_objs, width) {	
+
+
+
+
+
+
+
+
+
+
+
+
+//==============================================================================
+
+function Stream(dim_height, between_objs, width) {	
 	//A list of all annotations on the screen
 	this.annotations = [];
 	//A reference to the Annotation() being drawn
@@ -535,7 +539,8 @@ function Stream(data_objs, dim_height, between_objs, width) {
 	};
 
 	//A list of the data objects: text data converted to json
-	this.data_objs = data_objs;
+	this.data_objs = [];
+	this.time_events = [];
 
 	//helper counter, only used to work out height of svg
 	var total_dims = 0
@@ -548,7 +553,7 @@ function Stream(data_objs, dim_height, between_objs, width) {
 	this.between_objs = between_objs;
 	this.width = width;
 	this.transform = {x:0, k:1};
-	this.display_main = makeSvg(width, dim_height*total_dims+between_objs*data_objs.length, "left", "display-main");
+	this.display_main = makeSvg(width, dim_height*total_dims+between_objs*this.data_objs.length, "left", "display-main");
 	this.initial_hscale = makeTimeScale(this.data_objs, this.display_main);
 
 	this.hscale = makeTimeScale(this.data_objs, this.display_main);
@@ -561,21 +566,22 @@ function Stream(data_objs, dim_height, between_objs, width) {
 	this.video_end = null;
 
 	this.update = function() {
-		//d3.select(".left").selectAll("*");	
 		updatePropsFromDataObjs(this);
 
+		//Draw each dimension
 		var obj_offset = 0;
 		for (i in this.data_objs) {
 			drawDataObj(this, this.data_objs[i], obj_offset);
 			obj_offset += this.data_objs[i].dims.length * this.data_objs[i].vscale.range()[1]+this.between_objs;
 		}
 
+		drawTimeEvents(this);
 		this.axis = d3.axisBottom(this.hscale);
-		this.update_axis();
+		this.updateAxis();
 		drawGrid(this);
 	}
 
-	this.update_axis = function() {
+	this.updateAxis = function() {
 		//A white rectangle is painted first on display_axis 
 		//removed on each update 
 		if (this.display_axis.select(".white-rect").node() !== null) {

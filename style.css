@@ -86,7 +86,7 @@ label {
 	cursor: ew-resize;
 }
 
-.orange-line {
+.event-line {
 	stroke: orange;
 	stroke-width: 1px;
 }
