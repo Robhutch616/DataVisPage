@@ -9,7 +9,6 @@ The repo for this index page: https://github.com/Robhutch616/HARNIS-Viewer
 
 ----------------------------------------------------------------
 Still to do: 
-- implement drag and drop of time events data
 - implement data slicing for fast rendering
 
 Known bugs:
