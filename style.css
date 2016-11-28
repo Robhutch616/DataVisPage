@@ -87,6 +87,7 @@ label {
 }
 
 .event-line {
+	opacity: 0.3;
 	stroke: orange;
 	stroke-width: 1px;
 }

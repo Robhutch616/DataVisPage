@@ -22,7 +22,7 @@ function max(data, dim) {
 	return arrayMax(vals);
 }
 
-function getIndexJustBeforeTval(a, tval, mid_pointer=a.length/2) {
+function getReadingJustBeforeTval(a, tval, mid_pointer=a.length/2) {
 	if (a.length === 2) {
 		return a[0];
 	}
@@ -33,8 +33,8 @@ function getIndexJustBeforeTval(a, tval, mid_pointer=a.length/2) {
 		aleft = a.slice(0, imid+1),
 		aright = a.slice(imid, a.length);
 
-	if (tval < a[imid].t) return getIndexJustBeforeTval(aleft, tval, mid_pointer-aleft.length/2);
-	else return getIndexJustBeforeTval(aright, tval, mid_pointer+aright.length/2);
+	if (tval < a[imid].t) return getReadingJustBeforeTval(aleft, tval, mid_pointer-aleft.length/2);
+	else return getReadingJustBeforeTval(aright, tval, mid_pointer+aright.length/2);
 }
 
 //Appends svg to div of div_class
@@ -233,6 +233,67 @@ function Annotation(stream, click_event, text) {
     }
 }
 
+
+function DraggableLine(stream, x) {
+	this.stream = stream;
+    this.x = x;
+    this.correspond_readings = [];
+    this.correspond_indices = [];
+    this.line = null;
+    //Draw a rectangle around the line to make it easier to mouse over it
+    this.mouseover_rect = null;
+    
+    var this_line = this;
+    var display_height = stream.display_main.attr("height");
+
+    //Convert line x to timestamp
+    var inv_scale = stream.hscale.invert(x);     
+    stream.data_objs.map(function (obj) {
+    	//this_line.correspond_readings.push(getReadingJustBeforeTval(obj.data, inv_scale));
+    	this_line.correspond_indices.push(obj.data.indexOf(getReadingJustBeforeTval(obj.data, inv_scale)));
+    })
+
+
+    this.update = function(timestamp_x) {
+    	//Remove old elements
+        if (this.line != null) this.line.node().remove();
+        if (this.mouseover_rect != null) this.mouseover_rect.node().remove();
+        
+        //Draw new elements
+        this.line = drawLine(this.stream, this.x, "blue-line", true)
+            .style("stroke", "green");
+        this.mouseover_rect = drawRect(this.x, 15, "line-rect");
+        console.log("drew line");
+
+        //Convert line x to timestamp
+        var inv_scale = stream.hscale.invert(timestamp_x);
+        this.correspond_indices = [];      
+        stream.data_objs.map(function (obj) {
+        	//this_line.correspond_readings.push(getReadingJustBeforeTval(obj.data, inv_scale));
+        	this_line.correspond_indices.push(obj.data.indexOf(getReadingJustBeforeTval(obj.data, inv_scale)));
+      	});
+        //Attach mouse event listeners
+        this.mouseover_rect.on("mouseover", function() {
+            stream.selected_line = this_line;
+            this_line.line.style("stroke", "aqua")
+                .style("stroke-width", "3px");
+        });
+        this.mouseover_rect.on("mouseout", function() {
+            stream.selected_line = null;
+            this_line.line.style("stroke", "green")
+            .style("stroke-width", "1px");            
+        });
+        this.mouseover_rect.call(d3.drag().on("drag", function() {
+            this_line.x = d3.event.x;
+            this_line.update(d3.event.sourceEvent.x);
+            //console.log(d3.event);
+        }));
+    }
+    
+
+    this.delete = function(){"can't be deleted"};
+}
+
 function AnnotationLine(stream, click_event, label, parent_annotation) {
     var this_line = this;
     //So that when the line is deleted its Annotation() is too
@@ -263,7 +324,7 @@ function AnnotationLine(stream, click_event, label, parent_annotation) {
 
         //Convert line x to timestamp
         var inv_scale = stream.hscale.invert(timestamp_x);
-        this.timestamp = getIndexJustBeforeTval(stream.data_objs[0].data, inv_scale).t;    
+        this.timestamp = getReadingJustBeforeTval(stream.data_objs[0].data, inv_scale).t;    
         
         //Attach mouse event listeners
         this.mouseover_rect.on("mouseover", function() {
@@ -499,7 +560,6 @@ function drawGrid(stream) {
 }
 
 function drawTimeEvents(stream) {
-	console.log(stream.time_events);
 	stream.time_events.map(function(t) {
 		drawLine(stream, t, "event-line");
 	})
@@ -538,6 +598,8 @@ function Stream(dim_height, between_objs, width) {
 	    "3":"burlywood"
 	};
 
+	this.cutoff_lines = [];
+
 	//A list of the data objects: text data converted to json
 	this.data_objs = [];
 	this.time_events = [];
@@ -571,6 +633,13 @@ function Stream(dim_height, between_objs, width) {
 		//Draw each dimension
 		var obj_offset = 0;
 		for (i in this.data_objs) {
+			// var sliced_obj = this.data_objs[i];
+			// var left_index = this.cutoff_lines[0].correspond_indices[i];
+			// var right_index = this.cutoff_lines[1].correspond_indices[i];
+			// sliced_obj.data = sliced_obj.data.slice(left_index, right_index);
+
+			console.log(this.cutoff_lines);
+			//console.log(sliced_obj);
 			drawDataObj(this, this.data_objs[i], obj_offset);
 			obj_offset += this.data_objs[i].dims.length * this.data_objs[i].vscale.range()[1]+this.between_objs;
 		}
@@ -618,7 +687,8 @@ function Stream(dim_height, between_objs, width) {
 
 	bindKeyListeners(this);
 	bindMouseListeners(this);
-	
+
+
 	//addVideo("AntonPhysio/17_11_16/3/VIDEO_17-11-16_10-19-55-188.mp4", this, 1479378002766);
 
 	// plotTimeEvents(this, [

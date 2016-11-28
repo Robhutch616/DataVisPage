@@ -36,6 +36,15 @@ var videoDrop = document.getElementById('video_drop');
 videoDrop.addEventListener('dragover', handleDragOver, false);
 videoDrop.addEventListener('drop', handleVideoDrop, false);
 
+
+//===========================
+
+
+
+//===========================
+
+
+
 function updateStreamWith(files_contents) {
     var stream_data_objs = [];
     var event_timestamps = [];
@@ -83,6 +92,15 @@ function updateStreamWith(files_contents) {
 
     //Updates stream
     stream.data_objs = stream_data_objs;
+    //cutoff lines are initialised and drawn
+
+    var left_cutoff = new DraggableLine(stream, 50);
+    var right_cutoff = new DraggableLine(stream, 350);
+    left_cutoff.update();
+    right_cutoff.update(); 
+    stream.cutoff_lines = [left_cutoff, right_cutoff]
+
+
     stream.update();
 }
 
