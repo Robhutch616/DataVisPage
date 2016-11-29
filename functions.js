@@ -252,7 +252,7 @@ function DraggableLine(stream, x) {
     	//this_line.correspond_readings.push(getReadingJustBeforeTval(obj.data, inv_scale));
     	this_line.correspond_indices.push(obj.data.indexOf(getReadingJustBeforeTval(obj.data, inv_scale)));
     })
-
+    stream.cutoff_lines.push(this);
 
     this.update = function(timestamp_x) {
     	//Remove old elements
@@ -263,7 +263,6 @@ function DraggableLine(stream, x) {
         this.line = drawLine(this.stream, this.x, "blue-line", true)
             .style("stroke", "green");
         this.mouseover_rect = drawRect(this.x, 15, "line-rect");
-        console.log("drew line");
 
         //Convert line x to timestamp
         var inv_scale = stream.hscale.invert(timestamp_x);
@@ -283,14 +282,20 @@ function DraggableLine(stream, x) {
             this_line.line.style("stroke", "green")
             .style("stroke-width", "1px");            
         });
-        this.mouseover_rect.call(d3.drag().on("drag", function() {
-            this_line.x = d3.event.x;
-            this_line.update(d3.event.sourceEvent.x);
-            //console.log(d3.event);
-        }));
+        
+        this.mouseover_rect.call(d3.drag()
+	        .on("drag", function() {
+	            this_line.x = d3.event.x;
+	            this_line.update(d3.event.sourceEvent.x);
+	        })
+	        .on("end", function(){
+	        	stream.update();
+	            this_line.x = d3.event.x;
+	            this_line.update(d3.event.sourceEvent.x);
+	        })
+	    );
     }
     
-
     this.delete = function(){"can't be deleted"};
 }
 
@@ -465,7 +470,6 @@ function bindMouseListeners(stream) {
 
 function makeLabelsString(stream) {    
     var labels_string = "";
-    console.log("making string...")
     stream.annotations.map(function(annotation) {
         var start = parseFloat(annotation.first_line.timestamp),
             finish = parseFloat(annotation.second_line.timestamp);
@@ -509,7 +513,7 @@ function updatePropsFromDataObjs(stream) {
 	stream.clicked = false;
 	stream.current_label = 0;
 
-	var total_dims = 0
+	var total_dims = 0;
 	stream.data_objs.map(function(obj) {
 		total_dims += obj.dims.length;
 	});
@@ -526,6 +530,9 @@ function updatePropsFromDataObjs(stream) {
 	//Put vertical scales into data objects and assign transformation group
 	stream.data_objs.map( function(obj) {makeVertScale(obj, stream.dim_height)} );
 	stream.display_main.append("g").attr("class", "line-group");
+
+	stream.cutoff_lines[0].update(stream.cutoff_lines[0].x);
+	stream.cutoff_lines[1].update(stream.cutoff_lines[1].x);
 
 	bindKeyListeners(stream);
 	bindMouseListeners(stream);
@@ -616,6 +623,7 @@ function Stream(dim_height, between_objs, width) {
 	this.width = width;
 	this.transform = {x:0, k:1};
 	this.display_main = makeSvg(width, dim_height*total_dims+between_objs*this.data_objs.length, "left", "display-main");
+	//Used for video
 	this.initial_hscale = makeTimeScale(this.data_objs, this.display_main);
 
 	this.hscale = makeTimeScale(this.data_objs, this.display_main);
@@ -633,15 +641,19 @@ function Stream(dim_height, between_objs, width) {
 		//Draw each dimension
 		var obj_offset = 0;
 		for (i in this.data_objs) {
-			// var sliced_obj = this.data_objs[i];
-			// var left_index = this.cutoff_lines[0].correspond_indices[i];
-			// var right_index = this.cutoff_lines[1].correspond_indices[i];
-			// sliced_obj.data = sliced_obj.data.slice(left_index, right_index);
+			var sliced_obj = {};
+			var left_index = this.cutoff_lines[0].correspond_indices[i];
+			var right_index = this.cutoff_lines[1].correspond_indices[i];
+			sliced_obj.data = this.data_objs[i].data.slice(left_index, right_index);
+			sliced_obj.dims = this.data_objs[i].dims;
+			sliced_obj.vscale = this.data_objs[i].vscale;
 
-			console.log(this.cutoff_lines);
-			//console.log(sliced_obj);
-			drawDataObj(this, this.data_objs[i], obj_offset);
-			obj_offset += this.data_objs[i].dims.length * this.data_objs[i].vscale.range()[1]+this.between_objs;
+			if (Math.abs(right_index - left_index) > 0) {
+				drawDataObj(this, sliced_obj, obj_offset);
+			} else {
+				drawDataObj(this, this.data_objs[i], obj_offset);
+			}
+			obj_offset += this.data_objs[i].dims.length * this.data_objs[i].vscale.range()[1]+this.between_objs;				
 		}
 
 		drawTimeEvents(this);

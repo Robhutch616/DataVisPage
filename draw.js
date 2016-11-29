@@ -1,6 +1,5 @@
 var textFile = null;
 var makeTextFile = function (text) {
-    console.log(text);
     var data = new Blob([text], {type: 'text/plain'});
 
     // If we are replacing a previously generated file we need to
@@ -61,7 +60,6 @@ function updateStreamWith(files_contents) {
                 var num = parseFloat(t)
                 if (typeof(num) === "number") {return num;} 
             });
-            // console.log(stream.time_events);
             continue;
         }
 
@@ -96,12 +94,13 @@ function updateStreamWith(files_contents) {
 
     var left_cutoff = new DraggableLine(stream, 50);
     var right_cutoff = new DraggableLine(stream, 350);
-    left_cutoff.update();
-    right_cutoff.update(); 
-    stream.cutoff_lines = [left_cutoff, right_cutoff]
-
 
     stream.update();
+
+    left_cutoff.update(50);
+    right_cutoff.update(350); 
+
+    //stream.cutoff_lines = [left_cutoff, right_cutoff]
 }
 
 function handleDataDrop(evt) {
