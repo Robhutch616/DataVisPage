@@ -99,7 +99,7 @@ function updateStreamWith(files_contents) {
 
     left_cutoff.update(50);
     right_cutoff.update(350); 
-
+    stream.annotations = [];
     //stream.cutoff_lines = [left_cutoff, right_cutoff]
 }
 

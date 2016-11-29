@@ -231,8 +231,12 @@ function Annotation(stream, click_event, text) {
         this.second_line.x = (move_event.offsetX-stream.transform.x)/stream.transform.k;
         this.second_line.update(move_event.x); 
     }
-}
 
+    this.draw = function() {
+    	this.first_line.update(this.first_line.timestamp);
+    	this.second_line.update(this.second_line.timestamp);
+    }
+}
 
 function DraggableLine(stream, x) {
 	this.stream = stream;
@@ -508,7 +512,6 @@ function createOutputButton(stream) {
 function updatePropsFromDataObjs(stream) {
 	stream.display_main.node().remove();
 	stream.selected_line = null;
-	stream.annotations = [];
 	stream.current_anno = null;
 	stream.clicked = false;
 	stream.current_label = 0;
@@ -521,15 +524,14 @@ function updatePropsFromDataObjs(stream) {
 	stream.transform = {x:0, k:1};
 	stream.display_main = makeSvg(stream.width, stream.dim_height*total_dims+stream.between_objs*stream.data_objs.length, "left", "display-main");
 	stream.initial_hscale = makeTimeScale(stream.data_objs, stream.display_main);
-
-	// this.axis = d3.axisBottom(this.hscale);
-	// this.display_axis = makeSvg(width, 30, "left", "axis");
-
 	stream.hscale = makeTimeScale(stream.data_objs, stream.display_main);
 
 	//Put vertical scales into data objects and assign transformation group
 	stream.data_objs.map( function(obj) {makeVertScale(obj, stream.dim_height)} );
 	stream.display_main.append("g").attr("class", "line-group");
+
+	//Redraw removed annotations
+	stream.annotations.map(function(a){a.draw();}); 
 
 	stream.cutoff_lines[0].update(stream.cutoff_lines[0].x);
 	stream.cutoff_lines[1].update(stream.cutoff_lines[1].x);
