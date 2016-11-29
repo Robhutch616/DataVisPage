@@ -9,6 +9,7 @@ The repo for this index page: https://github.com/Robhutch616/HARNIS-Viewer
 
 ----------------------------------------------------------------
 Still to do:
+- stop annotations being removed when resizing
 - sort out entering video timestamps
 - add first person video feed
 - (minor) fix layout
